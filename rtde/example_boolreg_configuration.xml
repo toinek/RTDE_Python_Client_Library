@@ -1,0 +1,9 @@
+<?xml version="1.0"?>
+<rtde_config>
+	<recipe key="outputs">
+		<field name="input_bit_register_70" type="BOOL"/>
+	</recipe>
+	<recipe key="inputs">
+		<field name="input_bit_register_73" type="BOOL"/>
+	</recipe>
+</rtde_config>
