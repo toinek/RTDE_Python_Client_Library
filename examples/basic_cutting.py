@@ -2,6 +2,7 @@ import argparse
 import logging
 import sys
 sys.path.append('..')
+
 import rtde.rtde as rtde
 import rtde.rtde_config as rtde_config
 import time
@@ -11,8 +12,33 @@ import numpy as np
 class Pose:
     def __init__(self, x, y, z, rx, ry, rz, to_cut=False, to_release=False):
         self.position = [x, y, z, rx, ry, rz]
-        self.to_cut = to_cut
+        self.to_cut = to_cut # Cutting is a coupled motion with gripping
         self.to_release = to_release
+
+# class Robot:
+#     def __init__(self, host, port, config):
+#         self.host = host
+#         self.port = port
+#         self.config = config
+#         self.con = rtde.RTDE(self.host, self.port)
+#         self.con.connect()
+#         self.con.get_controller_version()
+#
+#         self.output_names, self.output_types = self.config.get_recipe('out')
+#         self.waypoint_names, self.waypoint_types = self.config.get_recipe('waypoint')
+#         self.scissors_names, self.scissors_types = self.config.get_recipe('scissors')
+#         self.y_belt_names, self.y_belt_types = self.config.get_recipe('y_belt')
+#         self.z_belt_names, self.z_belt_types = self.config.get_recipe('z_belt')
+#         self.gripper_names, self.gripper_types = self.config.get_recipe('gripper')
+#         self.watchdog_names, self.watchdog_types = self.config.get_recipe("watchdog")
+#
+#         self.waypoint = self.con.send_input_setup(self.waypoint_names, self.waypoint_types)
+#         self.scissors = self.con.send_input_setup(self.scissors_names, self.scissors_types)
+#         self.watchdog = self.con.send_input_setup(self.watchdog_names, self.watchdog_types)
+#         self.y_belt = self.con.send_input_setup(self.y_belt_names, self.y_belt_types)
+#         self.z_belt = self.con.send_input_setup(self.z_belt_names, self.z_belt_types)
+#         self.gripper = self.con.send_input_setup(self.gripper_names, self.gripper_types)
+#         self.con.send_start()
 
 def list_to_setp(waypoint, list):
     for i in range(0, 6):
@@ -50,13 +76,14 @@ def control_gripper(con, gripper, width, force):
     print(gripper.__dict__)
     con.send(gripper)
     time.sleep(2)
-
+""""TODO: create variables at the top of the script"""
 def follow_path(con, scissors, waypoint, path):
     grip = 145
     force = 50
     control_gripper(con, gripper, grip, force)
     move_y(con, y_belt, -0.039)
     for pose in path:
+        """"TODO: Use logger instead of print, info, warning, error, critical"""
         print("Moving to pose: ", pose.position)
         send_waypoint(con, waypoint, pose.position)
         pose_reached = False
@@ -70,22 +97,24 @@ def follow_path(con, scissors, waypoint, path):
                 if distance_to_pose == 0:
                     pose_reached = True
                     if pose.to_cut:
+                        """TODO: add while loops for cutting, gripping, releasing based on RTDE output"""
+                        """"Try to find signal when cutting/grasping is done"""
                         grip = 50
                         control_gripper(con, gripper, grip, force)
                         move_y(con, y_belt, -0.12)
                         control_scissors(con, scissors, close=True)
                         time.sleep(1)
-                    if pose.to_release:
-                        grip = 145
-                        control_gripper(con, gripper, grip, force)
-                        time.sleep(1)
+                    # if pose.to_release:
+                    #     grip = 145
+                    #     control_gripper(con, gripper, grip, force)
+                    #     time.sleep(1)
 
 # parameters
 parser = argparse.ArgumentParser()
 parser.add_argument('--host', default='192.168.1.10',help='name of host to connect to (localhost)')
 parser.add_argument('--port', type=int, default=30004, help='port number (30004)')
 parser.add_argument('--samples', type=int, default=0,help='number of samples to record')
-parser.add_argument('--frequency', type=int, default=125, help='the sampling frequency in Herz')
+parser.add_argument('--frequency', type=int, default=125, help='the sampling frequency in Hertz')
 parser.add_argument('--config', default='basic_cutting_configuration.xml', help='data configuration file to use (record_configuration.xml)')
 parser.add_argument("--buffered", help="Use buffered receive which doesn't skip data", action="store_true")
 parser.add_argument("--binary", help="save the data in binary format", action="store_true")
@@ -112,6 +141,7 @@ watchdog_names, watchdog_types = conf.get_recipe("watchdog")
 
 # Sending reading, waypoint, belts and scissors input setup
 con.send_output_setup(output_names, output_types, frequency=args.frequency)
+"""TODO: make attributes for robot class"""
 waypoint = con.send_input_setup(waypoint_names, waypoint_types)
 scissors = con.send_input_setup(scissors_names, scissors_types)
 watchdog = con.send_input_setup(watchdog_names, watchdog_types)
