@@ -39,6 +39,7 @@
         <field name="standard_analog_output1" type="DOUBLE"/>
         <field name="tool_analog_input0" type="DOUBLE"/>
         <field name="tool_analog_input1" type="DOUBLE"/>
+		<field name="output_bit_register_76" type="BOOL"/>
 	</recipe>
 
 	<recipe key="waypoint">

@@ -38,64 +38,34 @@ con.send_start()
 
 
 #
-input_names, input_types = conf.get_recipe('in')
-setp = con.send_input_setup(input_names, input_types)
-waypoint = [-0.12, -0.51, 0.21, 0, 3.11, 0.04]
-waypoint = [-0.384, 0.673, 0.200, 0.106, 3.120, 0.013]
-
-setp.input_double_register_0 = 0
-setp.input_double_register_1 = 0
-setp.input_double_register_2 = 0
-setp.input_double_register_3 = 0
-setp.input_double_register_4 = 0
-setp.input_double_register_5 = 0
-
-print(setp.__dict__)
-def list_to_setp(sp, list):
-    for i in range(0, 6):
-        sp.__dict__["input_double_register_%i" % i] = list[i]
-    return sp
-X = 0
-Y = 0
-Z = 0
-RX = 0
-RY = 0
-RZ = 0
-i = 1
-while True:
-    command = list_to_setp(setp, waypoint)
-    print(setp.__dict__)
-    con.send(command)
-    try:
-        if args.buffered:
-            state = con.receive_buffered(args.binary)
-        else:
-            state = con.receive(args.binary)
-        if state is not None:
-            X,Y,Z,RX,RY,RZ = state.actual_TCP_pose
-            date_and_time = state.timestamp
-            i += 1
-            print(str(date_and_time)+" TCP: pos ["+str(X)+", "+str(Y)+", "+str(Z)+"] m, rot ["+str(RX)+", "+str(RY)+", "+str(RZ)+"] rad")
-            time.sleep(0.1)
-    except KeyboardInterrupt:
-        break
-    except rtde.RTDEException:
-        break
-
-# """"// This is a script for reading the the robot endpoint state"""
-
-# # initialize variables
+# input_names, input_types = conf.get_recipe('in')
+# setp = con.send_input_setup(input_names, input_types)
+# waypoint = [-0.12, -0.51, 0.21, 0, 3.11, 0.04]
+# waypoint = [-0.384, 0.673, 0.200, 0.106, 3.120, 0.013]
+#
+# setp.input_double_register_0 = 0
+# setp.input_double_register_1 = 0
+# setp.input_double_register_2 = 0
+# setp.input_double_register_3 = 0
+# setp.input_double_register_4 = 0
+# setp.input_double_register_5 = 0
+#
+# print(setp.__dict__)
+# def list_to_setp(sp, list):
+#     for i in range(0, 6):
+#         sp.__dict__["input_double_register_%i" % i] = list[i]
+#     return sp
 # X = 0
 # Y = 0
 # Z = 0
 # RX = 0
 # RY = 0
 # RZ = 0
-# # main loop
 # i = 1
 # while True:
-#     if args.samples > 0 and i >= args.samples:
-#         keep_running = False
+#     command = list_to_setp(setp, waypoint)
+#     print(setp.__dict__)
+#     con.send(command)
 #     try:
 #         if args.buffered:
 #             state = con.receive_buffered(args.binary)
@@ -107,11 +77,41 @@ while True:
 #             i += 1
 #             print(str(date_and_time)+" TCP: pos ["+str(X)+", "+str(Y)+", "+str(Z)+"] m, rot ["+str(RX)+", "+str(RY)+", "+str(RZ)+"] rad")
 #             time.sleep(0.1)
-#
 #     except KeyboardInterrupt:
 #         break
 #     except rtde.RTDEException:
 #         break
-#
-# con.send_pause()
-# con.disconnect()
+
+# """"// This is a script for reading the the robot endpoint state"""
+
+# initialize variables
+X = 0
+Y = 0
+Z = 0
+RX = 0
+RY = 0
+RZ = 0
+# main loop
+i = 1
+while True:
+    if args.samples > 0 and i >= args.samples:
+        keep_running = False
+    try:
+        if args.buffered:
+            state = con.receive_buffered(args.binary)
+        else:
+            state = con.receive(args.binary)
+        if state is not None:
+            X,Y,Z,RX,RY,RZ = state.actual_TCP_pose
+            date_and_time = state.timestamp
+            i += 1
+            print(str(date_and_time)+" TCP: pos ["+str(X)+", "+str(Y)+", "+str(Z)+"] m, rot ["+str(RX)+", "+str(RY)+", "+str(RZ)+"] rad")
+            time.sleep(0.1)
+
+    except KeyboardInterrupt:
+        break
+    except rtde.RTDEException:
+        break
+
+con.send_pause()
+con.disconnect()

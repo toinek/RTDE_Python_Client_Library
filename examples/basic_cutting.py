@@ -55,7 +55,7 @@ def send_waypoint(con, waypoint, list):
 def move_y(con, y_belt, distance):
     y_belt.input_double_register_6 = distance
     con.send(y_belt)
-    time.sleep(1.5)
+    time.sleep(1)
 
 def move_z(con, z_belt, distance):
     z_belt.input_double_register_7 = distance
@@ -64,27 +64,23 @@ def move_z(con, z_belt, distance):
 def control_scissors(con, scissors, close=False):
     scissors.input_bit_register_73 = close
     con.send(scissors)
-    print("Scissors closed")
-    time.sleep(1.5)
+    # print("Scissors closed")
+    time.sleep(0.5)
     scissors.input_bit_register_73 = not close
     con.send(scissors)
-    print("Scissors opened")
+    # print("Scissors opened")
 
 def control_gripper(con, gripper, width, force):
     gripper.input_double_register_8 = width
     gripper.input_double_register_9 = force
-    print(gripper.__dict__)
     con.send(gripper)
-    time.sleep(2)
+
 """"TODO: create variables at the top of the script"""
 def follow_path(con, scissors, waypoint, path):
     grip = 145
-    force = 50
-    control_gripper(con, gripper, grip, force)
-    move_y(con, y_belt, -0.039)
     for pose in path:
         """"TODO: Use logger instead of print, info, warning, error, critical"""
-        print("Moving to pose: ", pose.position)
+        # print("Moving to pose: ", pose.position)
         send_waypoint(con, waypoint, pose.position)
         pose_reached = False
         while not pose_reached:
@@ -99,16 +95,15 @@ def follow_path(con, scissors, waypoint, path):
                     if pose.to_cut:
                         """TODO: add while loops for cutting, gripping, releasing based on RTDE output"""
                         """"Try to find signal when cutting/grasping is done"""
-                        grip = 50
-                        control_gripper(con, gripper, grip, force)
+                        grip = np.random.randint(50, 120)
+                        control_gripper(con, gripper, 50, force=120)
                         move_y(con, y_belt, -0.12)
                         control_scissors(con, scissors, close=True)
-                        time.sleep(1)
-                    # if pose.to_release:
-                    #     grip = 145
-                    #     control_gripper(con, gripper, grip, force)
-                    #     time.sleep(1)
-
+                    if pose.to_release:
+                        grip = 145
+                        control_gripper(con, gripper, grip, force=120)
+                        time.sleep(0.5)
+                        move_y(con, y_belt, -0.039)
 # parameters
 parser = argparse.ArgumentParser()
 parser.add_argument('--host', default='192.168.1.10',help='name of host to connect to (localhost)')
@@ -163,15 +158,24 @@ pre_place = Pose(-0.800, 0.500, -0.035, 0.00, 3.032, 0.812)
 place = Pose(-0.800, 0.500, -0.06, 0.00, 3.032, 0.812, to_release=True)
 
 poses = [home_pos, boven_pick, knip_pos, after_knip, pre_place, place, home_pos]
-follow_path(con, scissors, waypoint, poses)
 
-
-"""TODO: write code to control belt axes"""
-# y_belt.input_double_register_6 = 0.03
-# z_belt.input_double_register_7 = -0.05
-# while True:
-#     con.send(y_belt)
-#     con.send(z_belt)
-
+# Main loop to run for 2 hours
+start_time = time.time()
+two_hours_later = 3600
+print(start_time, two_hours_later)
+runs = 0
+run_lengths = []
+last_run = time.time()
+while time.time() - start_time < two_hours_later:
+    print(f'seconds passed: {time.time() - start_time}')
+    follow_path(con, scissors, waypoint, poses)
+    run_length = time.time() - last_run
+    run_lengths.append(run_length)
+    last_run = time.time()
+    runs += 1
+    print(f'runs completed: {runs}')
+print(f'average run length: {np.mean(run_lengths)}')
+print(f'runs completed: {runs}')
 con.send_pause()
 con.disconnect()
+
