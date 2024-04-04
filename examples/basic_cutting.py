@@ -21,7 +21,7 @@ class Pose:
         self.to_release = to_release
 
 class Robot:
-    """The class Robot is used to control the robot. First the connection with the RTDE client is setup and
+    """The class Robot is used to control the robot. First the connection with the RTDE client is set up and
     the recipes are loaded from the configuration file. The class has methods to move the robot to a waypoint,
     move the robot in the y and z direction, control the scissors and the gripper. The class also has a method
     to disconnect the robot"""
@@ -56,34 +56,34 @@ class Robot:
         self.con.send_start()
         self.logger.info("Robot setup complete")
 
-    def list_to_setp(self, list):
-        """"The method list_to_setp is used to fill the waypoint register to be sent to the robot
+    def list_to_setp(self, pose):
+        """The method list_to_setp is used to fill the waypoint register to be sent to the robot
         with a list of 6 values. The values are the x, y, z, rx, ry, rz coordinates of the robot."""
         for i in range(0, 6):
-            self.waypoint.__dict__["input_double_register_%i" % i] = list[i]
+            self.waypoint.__dict__["input_double_register_%i" % i] = pose[i]
 
     def euclidean_distance(self, p1, p2):
-        """"Calculate the Euclidean distance between two points in 3D space"""
+        """Calculate the Euclidean distance between two points in 3D space"""
         return ((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2 + (p1[2]-p2[2])**2)**0.5
 
-    def send_waypoint(self, list):
-        """"Sets the waypoint registers with a list of poses and sends these to the robot"""
-        self.list_to_setp(list)
+    def send_waypoint(self, pose):
+        """Sets the waypoint registers with a list of poses and sends these to the robot"""
+        self.list_to_setp(pose)
         self.con.send(self.waypoint)
 
     def move_y(self, distance):
-        """"Sets and sends the y_belt registers to move the robot scissors in the y direction"""
+        """Sets and sends the y_belt registers to move the robot scissors in the y direction"""
         self.y_belt.input_double_register_6 = distance
         self.con.send(self.y_belt)
         time.sleep(1)
 
     def move_z(self, distance):
-        """"Sets and sends the z_belt registers to move the robot scissors in the z direction"""
+        """Sets and sends the z_belt registers to move the robot scissors in the z direction"""
         self.z_belt.input_double_register_7 = distance
         self.con.send(self.z_belt)
 
     def control_scissors(self, close=False):
-        """"Sets and sends the scissors registers to control closing & opening of the scissors"""
+        """Sets and sends the scissors registers to control closing & opening of the scissors"""
         self.scissors.input_bit_register_73 = close
         self.con.send(self.scissors)
         # print("Scissors closed")
@@ -93,18 +93,18 @@ class Robot:
         # print("Scissors opened")
 
     def control_gripper(self, width, force):
-        """"Sets and sends the gripper registers to control the width and force of the gripping motion"""
+        """Sets and sends the gripper registers to control the width and force of the gripping motion"""
         self.gripper.input_double_register_8 = width
         self.gripper.input_double_register_9 = force
         self.con.send(self.gripper)
 
     def disconnect(self):
-        """"Disconnect the robot"""
+        """Disconnect the robot"""
         self.con.send_pause()
         self.con.disconnect()
 
     def follow_path(self, path):
-        """"Follow a path of poses. Each pose is a waypoint the robot should move to.
+        """Follow a path of poses. Each pose is a waypoint the robot should move to.
         If the pose has the to_cut or to_release variable set to True, the robot will perform
         the cutting or releasing action. The robot will grip the object before cutting."""
         for pose in path:
@@ -115,7 +115,6 @@ class Robot:
             while not pose_reached:
                 state = self.con.receive(args.binary)
                 if state is not None:
-                    X, Y, Z, RX, RY, RZ = state.actual_TCP_pose
                     distance_to_pose = np.round(self.euclidean_distance(pose.position, state.actual_TCP_pose),3)
                     if distance_to_pose == 0:
                         pose_reached = True
