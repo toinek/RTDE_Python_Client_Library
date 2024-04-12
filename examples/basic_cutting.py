@@ -119,7 +119,6 @@ class Robot:
                     if distance_to_pose == 0:
                         pose_reached = True
                         if pose.to_cut:
-                            """TODO: add while loops for cutting, gripping, releasing based on RTDE output"""
                             """"Try to find signal when cutting/grasping is done"""
                             self.control_gripper(width=50, force=120)
                             self.move_y(-0.11)
